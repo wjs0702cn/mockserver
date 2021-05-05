@@ -1,0 +1,15 @@
+{
+  "title": "http response trigger",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "triggerClass": {
+      "type": "string"
+    },
+    "param": {
+      "type": "string"
+    }
+  },
+  "definitions": {
+  }
+}

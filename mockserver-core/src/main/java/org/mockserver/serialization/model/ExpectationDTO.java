@@ -4,7 +4,18 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.*;
+import org.mockserver.model.HttpClassCallback;
+import org.mockserver.model.HttpError;
+import org.mockserver.model.HttpForward;
+import org.mockserver.model.HttpObjectCallback;
+import org.mockserver.model.HttpOverrideForwardedRequest;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
+import org.mockserver.model.HttpResponseTrigger;
+import org.mockserver.model.HttpTemplate;
+import org.mockserver.model.ObjectWithJsonToString;
+import org.mockserver.model.OpenAPIDefinition;
+import org.mockserver.model.RequestDefinition;
 
 /**
  * @author jamesdbloom
@@ -16,6 +27,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     private Integer priority;
     private RequestDefinitionDTO httpRequest;
     private HttpResponseDTO httpResponse;
+    private HttpResponseTriggerDTO httpResponseTrigger;
     private HttpTemplateDTO httpResponseTemplate;
     private HttpClassCallbackDTO httpResponseClassCallback;
     private HttpObjectCallbackDTO httpResponseObjectCallback;
@@ -44,6 +56,10 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             HttpResponse httpResponse = expectation.getHttpResponse();
             if (httpResponse != null) {
                 this.httpResponse = new HttpResponseDTO(httpResponse);
+            }
+            HttpResponseTrigger httpResponseTrigger = expectation.getHttpResponseTrigger();
+            if (httpResponseTrigger != null) {
+                this.httpResponseTrigger = new HttpResponseTriggerDTO(httpResponseTrigger);
             }
             HttpTemplate httpResponseTemplate = expectation.getHttpResponseTemplate();
             if (httpResponseTemplate != null) {
@@ -98,6 +114,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     public Expectation buildObject() {
         RequestDefinition httpRequest = null;
         HttpResponse httpResponse = null;
+        HttpResponseTrigger httpResponseTrigger = null;
         HttpTemplate httpResponseTemplate = null;
         HttpClassCallback httpResponseClassCallback = null;
         HttpObjectCallback httpResponseObjectCallback = null;
@@ -115,6 +132,9 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         }
         if (this.httpResponse != null) {
             httpResponse = this.httpResponse.buildObject();
+        }
+        if (this.httpResponseTrigger != null) {
+            httpResponseTrigger = this.httpResponseTrigger.buildObject();
         }
         if (this.httpResponseTemplate != null) {
             httpResponseTemplate = this.httpResponseTemplate.buildObject();
@@ -161,6 +181,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         return new Expectation(httpRequest, times, timeToLive, priority)
             .withId(this.id)
             .thenRespond(httpResponse)
+            .setHttpResponseTrigger(httpResponseTrigger)
             .thenRespond(httpResponseTemplate)
             .thenRespond(httpResponseClassCallback)
             .thenRespond(httpResponseObjectCallback)
@@ -304,6 +325,15 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
 
     public ExpectationDTO setTimeToLive(TimeToLiveDTO timeToLive) {
         this.timeToLive = timeToLive;
+        return this;
+    }
+
+    public HttpResponseTriggerDTO getHttpResponseTrigger() {
+        return httpResponseTrigger;
+    }
+
+    public ExpectationDTO setHttpResponseTrigger(HttpResponseTriggerDTO httpResponseTrigger) {
+        this.httpResponseTrigger = httpResponseTrigger;
         return this;
     }
 

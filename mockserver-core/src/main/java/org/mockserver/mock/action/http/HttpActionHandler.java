@@ -11,7 +11,16 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpState;
-import org.mockserver.model.*;
+import org.mockserver.model.Action;
+import org.mockserver.model.HttpClassCallback;
+import org.mockserver.model.HttpError;
+import org.mockserver.model.HttpForward;
+import org.mockserver.model.HttpObjectCallback;
+import org.mockserver.model.HttpOverrideForwardedRequest;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
+import org.mockserver.model.HttpResponseTrigger;
+import org.mockserver.model.HttpTemplate;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
@@ -29,11 +38,24 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.configuration.ConfigurationProperties.*;
+import static org.mockserver.configuration.ConfigurationProperties.attemptToProxyIfNoMatchingExpectation;
+import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
+import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
+import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.cors.CORSHeaders.isPreflightRequest;
-import static org.mockserver.exception.ExceptionHandling.*;
-import static org.mockserver.log.model.LogEntry.LogMessageType.*;
-import static org.mockserver.log.model.LogEntryMessages.*;
+import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
+import static org.mockserver.exception.ExceptionHandling.connectionException;
+import static org.mockserver.exception.ExceptionHandling.sslHandshakeException;
+import static org.mockserver.log.model.LogEntry.LogMessageType.EXCEPTION;
+import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_RESPONSE;
+import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
+import static org.mockserver.log.model.LogEntry.LogMessageType.INFO;
+import static org.mockserver.log.model.LogEntry.LogMessageType.NO_MATCH_RESPONSE;
+import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
+import static org.mockserver.log.model.LogEntry.LogMessageType.WARN;
+import static org.mockserver.log.model.LogEntryMessages.NO_MATCH_RESPONSE_ERROR_MESSAGE_FORMAT;
+import static org.mockserver.log.model.LogEntryMessages.NO_MATCH_RESPONSE_NO_EXPECTATION_MESSAGE_FORMAT;
+import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.slf4j.event.Level.TRACE;
 
@@ -95,6 +117,8 @@ public class HttpActionHandler {
                 case RESPONSE: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpResponse response = getHttpResponseActionHandler().handle((HttpResponse) action);
+                        // trigger before response
+                        triggerResponseTrigger(httpStateHandler, expectation.getHttpResponseTrigger(), mockServerLogger);
                         writeResponseActionResponse(response, responseWriter, request, action, synchronous);
                         expectationPostProcessor.run();
                     }), synchronous);
@@ -334,6 +358,10 @@ public class HttpActionHandler {
             }
             responseWriter.writeResponse(request, response, false);
         }, synchronous, response.getDelay());
+    }
+
+    void triggerResponseTrigger(HttpState httpState, HttpResponseTrigger httpResponseTrigger, MockServerLogger mockServerLogger) {
+        getHttpResponseActionHandler().trigger(httpState, httpResponseTrigger, mockServerLogger);
     }
 
     void executeAfterForwardActionResponse(final HttpForwardActionResult responseFuture, final BiConsumer<HttpResponse, Throwable> command, final boolean synchronous) {

@@ -30,6 +30,8 @@ public class Expectation extends ObjectWithJsonToString {
     private final Times times;
     private final TimeToLive timeToLive;
     private HttpResponse httpResponse;
+    // trigger when http-response to handle addition job controlled by `triggerClass`
+    private HttpResponseTrigger httpResponseTrigger;
     private HttpTemplate httpResponseTemplate;
     private HttpClassCallback httpResponseClassCallback;
     private HttpObjectCallback httpResponseObjectCallback;
@@ -337,6 +339,15 @@ public class Expectation extends ObjectWithJsonToString {
         return httpError;
     }
 
+    public HttpResponseTrigger getHttpResponseTrigger() {
+        return httpResponseTrigger;
+    }
+
+    public Expectation setHttpResponseTrigger(HttpResponseTrigger httpResponseTrigger) {
+        this.httpResponseTrigger = httpResponseTrigger;
+        return this;
+    }
+
     @JsonIgnore
     public Action getAction() {
         Action action = null;
@@ -536,6 +547,7 @@ public class Expectation extends ObjectWithJsonToString {
             .withId(id)
             .withCreated(created)
             .thenRespond(httpResponse)
+            .setHttpResponseTrigger(httpResponseTrigger)
             .thenRespond(httpResponseTemplate)
             .thenRespond(httpResponseClassCallback)
             .thenRespond(httpResponseObjectCallback)
@@ -570,6 +582,7 @@ public class Expectation extends ObjectWithJsonToString {
             Objects.equals(times, that.times) &&
             Objects.equals(timeToLive, that.timeToLive) &&
             Objects.equals(httpResponse, that.httpResponse) &&
+            Objects.equals(httpResponseTrigger, that.httpResponseTrigger) &&
             Objects.equals(httpResponseTemplate, that.httpResponseTemplate) &&
             Objects.equals(httpResponseClassCallback, that.httpResponseClassCallback) &&
             Objects.equals(httpResponseObjectCallback, that.httpResponseObjectCallback) &&
@@ -584,7 +597,7 @@ public class Expectation extends ObjectWithJsonToString {
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(priority, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpError);
+            hashCode = Objects.hash(priority, httpRequest, times, timeToLive, httpResponse, httpResponseTrigger, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpError);
         }
         return hashCode;
     }

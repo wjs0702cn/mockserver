@@ -15,6 +15,9 @@
     "httpResponse": {
       "$ref": "#/definitions/httpResponse"
     },
+    "httpResponseTrigger": {
+      "$ref": "#/definitions/httpResponseTrigger"
+    },
     "httpResponseTemplate": {
       "$ref": "#/definitions/httpTemplate"
     },
